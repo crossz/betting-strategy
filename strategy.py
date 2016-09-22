@@ -97,7 +97,7 @@ class ExpectationInvestor(Investor):
 
     @staticmethod
     def get_probilities(odds_set):
-        odds_set = map(lambda x : float(x), odds_set)
+        odds_set = map(lambda x: float(x), odds_set)
         margin = 1/odds_set[0] + 1/odds_set[1] + 1/odds_set[2]
         return 1 / (margin * odds_set[0]), 1 / (margin * odds_set[1]), 1 / (margin * odds_set[2])
 
