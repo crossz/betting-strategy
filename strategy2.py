@@ -85,7 +85,10 @@ class KellyInvestor(Strategy):
 
                 if percentage > self.cash_out_factor_high or percentage < self.cash_out_factor_low:
                     total += self.ticket_bucket[i][ticket][0] / float(odds_set[i]) * self.ticket_bucket[i][ticket][1]
-                    print i, percentage, self.ticket_bucket[i][ticket], odds_set[i]
+                    # print i, percentage, self.ticket_bucket[i][ticket], odds_set[i]
+                    print 'CashOut -- > option: %d, ticket_odds: %f, invest: %f, market_odds: %s, changing_rate: %f' \
+                          % (i, self.ticket_bucket[i][ticket][0], self.ticket_bucket[i][ticket][1], odds_set[i], percentage)
+
                     del copy[ticket]
             self.ticket_bucket[i] = copy
             i += 1
@@ -102,6 +105,7 @@ class KellyInvestor(Strategy):
                 f = KellyInvestor.kelly_formula(odds_set[i], probilities[i])
                 invest = f * self.money
                 self.ticket_bucket[i][len(self.ticket_bucket[i])] = (odds_set[i], invest)
+                print 'BuyTicket --> option: %d, ticket_odds: %f, invest: %f' % (i, odds_set[i], invest)
                 self.invest += invest
                 self.money -= invest
 
@@ -142,7 +146,7 @@ for europe_id in europe_ids:
     if len(result_set) <= 50:
         continue
     try:
-        s = KellyInvestor(result_set)
+        s = KellyInvestor(result_set, cash_out_factor_low=-0.9)
         s.game_processing()
         s.show_final_stat()
     except ValueError as e:
