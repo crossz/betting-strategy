@@ -8,7 +8,7 @@ cur = conn.cursor()
 
 class Strategy:
 
-    def pricing(self, ticket_odds, market_odds):
+    def compute_changing_rate(self, ticket_odds, market_odds):
         pass
 
     def buy_ticket(self, odds_set):
@@ -63,7 +63,7 @@ class KellyInvestor(Strategy):
         margin = 1 / odds_set[0] + 1 / odds_set[1] + 1 / odds_set[2]
         return 1 / (margin * odds_set[0]), 1 / (margin * odds_set[1]), 1 / (margin * odds_set[2])
 
-    def pricing(self, ticket_odds, market_odds):
+    def compute_changing_rate(self, ticket_odds, market_odds):
         try:
             if ticket_odds > market_odds:
                 return (ticket_odds - market_odds) / (market_odds * (ticket_odds - 1)) + 1
@@ -81,7 +81,7 @@ class KellyInvestor(Strategy):
                 continue
             copy = self.ticket_bucket[i].copy()
             for ticket in self.ticket_bucket[i]:
-                percentage = self.pricing(self.ticket_bucket[i][ticket][0], float(odds_set[i]))
+                percentage = self.compute_changing_rate(self.ticket_bucket[i][ticket][0], float(odds_set[i]))
 
                 if percentage > self.cash_out_factor_high or percentage < self.cash_out_factor_low:
                     total += self.ticket_bucket[i][ticket][0] / float(odds_set[i]) * self.ticket_bucket[i][ticket][1]
@@ -95,6 +95,10 @@ class KellyInvestor(Strategy):
 
         self.winning += total
 
+    @staticmethod
+    def random_fluctuating(number):
+        return number * random.uniform(0.9, 1.1)
+
     def buy_ticket(self, odds_set):
         if odds_set[-1] == 'Run':
             return
@@ -102,12 +106,13 @@ class KellyInvestor(Strategy):
         probilities = KellyInvestor.get_probilities(odds_set)
         for i in range(len(odds_set)):
             if random.random() < self.buying_factor:
-                f = KellyInvestor.kelly_formula(odds_set[i], probilities[i])
-                invest = f * self.money
-                self.ticket_bucket[i][len(self.ticket_bucket[i])] = (odds_set[i], invest)
-                print 'BuyTicket --> option: %d, ticket_odds: %f, invest: %f' % (i, odds_set[i], invest)
-                self.invest += invest
-                self.money -= invest
+                f = KellyInvestor.kelly_formula(odds_set[i] - 1, KellyInvestor.random_fluctuating(probilities[i]))
+                if f > 0:
+                    invest = f * self.money
+                    self.ticket_bucket[i][len(self.ticket_bucket[i])] = (odds_set[i], invest)
+                    print 'BuyTicket --> option: %d, ticket_odds: %f, invest: %f' % (i, odds_set[i], invest)
+                    self.invest += invest
+                    self.money -= invest
 
     def __init__(self, odds_sets, buying_factor=0.5, cash_out_factor_high=1.8, cash_out_factor_low=-0.5):
         Strategy.__init__(self, odds_sets)
@@ -115,14 +120,20 @@ class KellyInvestor(Strategy):
         self.cash_out_factor_high = cash_out_factor_high
         self.cash_out_factor_low = cash_out_factor_low
 
+
+class NonCashoutInvestor(KellyInvestor):
+
+    def cash_out(self, odds_set):
+        pass
+
 sql = 'SELECT europe_id FROM company_odds_history ORDER BY RAND() LIMIT 50'
 
 cur.execute(sql)
 europe_ids = cur.fetchall()
 
-total_winning = 0
+total_money = 0
 total_invest = 0
-
+total_game = 0
 for europe_id in europe_ids:
     sql = 'SELECT \
         odds_one H, \
@@ -146,11 +157,19 @@ for europe_id in europe_ids:
     if len(result_set) <= 50:
         continue
     try:
-        s = KellyInvestor(result_set, cash_out_factor_low=-0.9)
+        s = KellyInvestor(result_set, buying_factor=0.8, cash_out_factor_high=1.8, cash_out_factor_low=-0.5)
+        # s = NonCashoutInvestor(result_set, buying_factor=0.1, cash_out_factor_high=1.5, cash_out_factor_low=-0.3)
         s.game_processing()
         s.show_final_stat()
+
+        total_invest += s.invest
+        total_money += s.winning
+        total_game += 1
     except ValueError as e:
         print e.message
     except IndentationError as e:
         print e.message
-
+print '=' * 70
+print 'total invest: %f' % total_invest
+print 'total winning: %f' % total_money
+print 'total game: %d' % total_game
