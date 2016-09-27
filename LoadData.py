@@ -27,9 +27,7 @@ class GameData:
         import pymysql
 
         game_list = list()
-        with pymysql.connect(host=db_host, user=db_user, passwd=db_passwd, db='crawler', charset='utf8') \
-                as cursor:
-
+        with pymysql.connect(host=db_host, user=db_user, passwd=db_passwd, db='crawler', charset='utf8') as cursor:
             with cursor as cur:
                 if europe_id is None:
                     sql = 'SELECT europe_id FROM company_odds_history ORDER BY RAND() LIMIT %d' % game_num

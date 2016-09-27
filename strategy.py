@@ -1,6 +1,6 @@
 # -*- coding=utf-8 -*-
 import random
-from LoadData import GameData
+from Analysis import ElasticSearchAnalyzer
 
 
 class Strategy:
