@@ -1,9 +1,21 @@
 # -*- coding=utf-8 -*-
-from elasticsearch.exceptions import RequestError
 
 
-class ElasticSearchAnalyzer:
+class Analyzer:
 
+    def __init__(self, game_info):
+        self.game_info = game_info
+
+    def insert_operation(self, operation, option, ticket_odds, invest, **kwargs):
+        pass
+
+    def insert_result(self, total_winning, total_invest, total_money):
+        pass
+
+
+class ElasticSearchAnalyzer(Analyzer):
+
+    from elasticsearch.exceptions import RequestError
     from elasticsearch import Elasticsearch
     es_host = '192.168.175.102'
     es_port = 9200
@@ -12,15 +24,14 @@ class ElasticSearchAnalyzer:
     es_client = Elasticsearch(hosts=[{'host': es_host, 'port': es_port}])
 
     def __init__(self, game_info):
+        Analyzer.__init__(self, game_info)
         try:
             ElasticSearchAnalyzer.es_client.indices.create(ElasticSearchAnalyzer.index, ElasticSearchAnalyzer.type)
-        except RequestError as e:
+        except ElasticSearchAnalyzer.RequestError as e:
             if e.error != 'index_already_exists_exception':
                 print e
 
-        self.game_info = game_info
-
-    def insert(self, operation, option, ticket_odds, invest, **kwargs):
+    def insert_operation(self, operation, option, ticket_odds, invest, **kwargs):
 
         # noinspection PyDictCreation
         operation_body = {
@@ -41,20 +52,61 @@ class ElasticSearchAnalyzer:
 
         ElasticSearchAnalyzer.es_client.create(ElasticSearchAnalyzer.index, ElasticSearchAnalyzer.type, body=operation_body)
 
-    def search(self, *args, **kwargs):
-        pass
 
-# game_info = {
-#     'europe_id': 123123,
-#     'handicap_line': -1,
-#     'hilo_line': 2,
-#     'result': '1-2',
-#     'strategy': 'KellyInvestor',
-#     'strategy_args': {
-#         'factor1': 0.5,
-#         'factor2': 1.8
-#     }
-# }
-#
-# eee = ElasticSearchAnalyzer(game_info)
-# eee.insert(1, 1, 1.23, 1000)
+class MySQLAnalyzer(Analyzer):
+
+    db_host = '192.168.1.5'
+    db_user = 'caiex'
+    db_passwd = '12345678'
+
+    import pymysql
+    conn = pymysql.connect(host=db_host, user=db_user, passwd=db_passwd, db='testing', charset='utf8')
+
+    def __init__(self, game_info):
+        Analyzer.__init__(self, game_info)
+
+    def insert_operation(self, operation, option, ticket_odds, invest, **kwargs):
+        market_odds = None
+        percentage = None
+        if len(kwargs) == 2:
+            market_odds = kwargs['market_odds']
+            percentage = kwargs['percentage']
+
+        with MySQLAnalyzer.conn.cursor() as cur:
+            sql = 'INSERT INTO operations ' \
+                  '(uuid, operation, `option`, ticket_odds, invest, market_odds, percentage) ' \
+                  'VALUES ' \
+                  '(%s, %s, %s, %s, %s, %s, %s)'
+            param = (self.game_info['uuid'].__str__(),
+                     operation,
+                     option,
+                     ticket_odds,
+                     invest,
+                     market_odds,
+                     percentage
+                     )
+            cur.execute(sql, param)
+            MySQLAnalyzer.conn.commit()
+
+    def insert_result(self, total_winning, total_invest, total_money):
+        with MySQLAnalyzer.conn.cursor() as cur:
+            sql = 'INSERT INTO result ' \
+                  '(uuid, europe_id, hadicap_line, hilo_line, result, strategy, strategy_args, total_winning, total_invest, final_money) ' \
+                  'VALUES ' \
+                  '(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+
+            param = (
+                self.game_info['uuid'].__str__(),
+                self.game_info['europe_id'],
+                self.game_info['handicap_line'],
+                self.game_info['hilo_line'],
+                self.game_info['result'],
+                self.game_info['strategy'],
+                self.game_info['strategy_args'].__str__(),
+                total_winning,
+                total_invest,
+                total_money
+            )
+
+            cur.execute(sql, param)
+            MySQLAnalyzer.conn.commit()

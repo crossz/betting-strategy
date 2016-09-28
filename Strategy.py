@@ -1,6 +1,6 @@
 # -*- coding=utf-8 -*-
 import random
-from Analysis import ElasticSearchAnalyzer
+import uuid
 
 
 class Strategy:
@@ -26,18 +26,29 @@ class Strategy:
             self.buy_ticket(odds_set)
             self.cash_out(odds_set[:-1:])
         self.payout()
+        self.analyzer.insert_result(self.winning, self.invest, self.money + self.winning)
+        self.show_final_stat()
 
     def show_final_stat(self):
         print 'invest: %f' % self.invest
         print 'winning: %f' % self.winning
         print 'money: %f' % (self.money + self.winning)
 
-    def __init__(self, game_data):
+    def __init__(self, game_data, analyzer):
         self.ticket_bucket = {0: {}, 1: {}, 2: {}}
         self.money = 1
         self.invest = 0
         self.winning = 0
         self.game_data = game_data
+        game_info = {
+            'uuid': uuid.uuid1(),
+            'europe_id': game_data.europe_id,
+            'handicap_line': game_data.handicap_line,
+            'hilo_line': game_data.hilo_line,
+            'result': game_data.result,
+            'strategy': str(self.__class__).split('.')[1]
+        }
+        self.analyzer = analyzer(game_info)
 
 
 class KellyInvestor(Strategy):
@@ -76,14 +87,21 @@ class KellyInvestor(Strategy):
                 if percentage > self.cash_out_factor_high or percentage < self.cash_out_factor_low:
                     total += self.ticket_bucket[i][ticket][0] / float(odds_set[i]) * self.ticket_bucket[i][ticket][1]
                     # print i, percentage, self.ticket_bucket[i][ticket], odds_set[i]
-                    print 'CashOut -- > option: %d, ticket_odds: %f, invest: %f, market_odds: %s, changing_rate: %f' \
-                          % (i, self.ticket_bucket[i][ticket][0], self.ticket_bucket[i][ticket][1], odds_set[i], percentage)
-
+                    self.store_operation(0, i, self.ticket_bucket[i][ticket][0], self.ticket_bucket[i][ticket][1], odds_set[i], percentage)
                     del ticket_copy[ticket]
             self.ticket_bucket[i] = ticket_copy
             i += 1
 
         self.winning += total
+
+    def store_operation(self, operation, option, ticket_odds, invest, market_odds, changing_rate):
+        self.analyzer.insert_operation(operation, option, ticket_odds, invest, market_odds=market_odds, percentage=changing_rate)
+        if operation == 0:
+            operation = 'CashOut'
+        elif operation == 1:
+            operation = 'BuyTicket'
+        print '%s -- > option: %d, ticket_odds: %f, invest: %f, market_odds: %s, changing_rate: %s' \
+            % (operation, option, ticket_odds, invest, market_odds, changing_rate)
 
     @staticmethod
     def random_fluctuating(number):
@@ -100,12 +118,19 @@ class KellyInvestor(Strategy):
                 if f > 0:
                     invest = f * self.money
                     self.ticket_bucket[i][len(self.ticket_bucket[i])] = (odds_set[i], invest)
-                    print 'BuyTicket --> option: %d, ticket_odds: %f, invest: %f' % (i, odds_set[i], invest)
+                    # print 'BuyTicket --> option: %d, ticket_odds: %f, invest: %f' % (i, odds_set[i], invest)
+                    self.store_operation(1, i, odds_set[i], invest, None, None)
                     self.invest += invest
                     self.money -= invest
 
-    def __init__(self, game_data, buying_factor=0.5, cash_out_factor_high=1.8, cash_out_factor_low=-0.5):
-        Strategy.__init__(self, game_data)
+    def __init__(self, game_data, analyzer, buying_factor=0.5, cash_out_factor_high=1.8, cash_out_factor_low=-0.5):
+        Strategy.__init__(self, game_data, analyzer)
+        self.analyzer.game_info['strategy_args'] = {
+            'buying_factor': buying_factor,
+            'cash_out_factor_high': cash_out_factor_high,
+            'cash_out_factor_low': cash_out_factor_low
+        }
+
         self.buying_factor = buying_factor
         self.cash_out_factor_high = cash_out_factor_high
         self.cash_out_factor_low = cash_out_factor_low
@@ -115,4 +140,3 @@ class NonCashoutInvestor(KellyInvestor):
 
     def cash_out(self, odds_set):
         pass
-

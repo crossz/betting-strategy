@@ -58,7 +58,6 @@ class GameData:
                     AND a.europe_id = %s \
                     ORDER BY \
                         a.update_time DESC' % europe_id
-
                     cur.execute(sql)
                     result_set = cur.fetchall()
                     if len(result_set) > 50:
