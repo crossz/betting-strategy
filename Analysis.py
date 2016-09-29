@@ -6,7 +6,7 @@ class Analyzer:
     def __init__(self, game_info):
         self.game_info = game_info
 
-    def insert_operation(self, operation, option, ticket_odds, invest, **kwargs):
+    def insert_operation(self, operation, option, ticket_odds, invest, market_odds, percentage):
         pass
 
     def insert_result(self, total_winning, total_invest, total_money):
@@ -31,7 +31,7 @@ class ElasticSearchAnalyzer(Analyzer):
             if e.error != 'index_already_exists_exception':
                 print e
 
-    def insert_operation(self, operation, option, ticket_odds, invest, **kwargs):
+    def insert_operation(self, operation, option, ticket_odds, invest, market_odds, percentage):
 
         # noinspection PyDictCreation
         operation_body = {
@@ -46,9 +46,6 @@ class ElasticSearchAnalyzer(Analyzer):
             'ticket_odds': ticket_odds,
             'invest': invest
         }
-        if len(kwargs) == 2:
-            operation_body['market_odds'] = kwargs['market_odds']
-            operation_body['percentage'] = kwargs['percentage']
 
         ElasticSearchAnalyzer.es_client.create(ElasticSearchAnalyzer.index, ElasticSearchAnalyzer.type, body=operation_body)
 
@@ -65,12 +62,7 @@ class MySQLAnalyzer(Analyzer):
     def __init__(self, game_info):
         Analyzer.__init__(self, game_info)
 
-    def insert_operation(self, operation, option, ticket_odds, invest, **kwargs):
-        market_odds = None
-        percentage = None
-        if len(kwargs) == 2:
-            market_odds = kwargs['market_odds']
-            percentage = kwargs['percentage']
+    def insert_operation(self, operation, option, ticket_odds, invest, market_odds, percentage):
 
         with MySQLAnalyzer.conn.cursor() as cur:
             sql = 'INSERT INTO operations ' \

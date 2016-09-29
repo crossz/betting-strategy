@@ -20,7 +20,11 @@ class GameData:
             self.result = 1
         elif int(score[0]) < int(score[2]):
             self.result = 2
-        self.odds_sets = map(lambda x: x[1:5:], origin_data[::-1])
+        self.odds_sets = map(GameData.split_odds, origin_data[::-1])
+
+    @staticmethod
+    def split_odds(origin):
+        return map(lambda x: float(x), origin[1:4:]) + list(origin[4:7:])
 
     @staticmethod
     def get_data_from_mysql(europe_id=None, game_num=50):
