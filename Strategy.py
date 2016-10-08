@@ -4,9 +4,20 @@ import uuid
 
 
 class Strategy:
+    """
+    Basic strategy logic with unimplements methods (e.g. buy_ticket, cash_out)
+    and implemented methods.(e.g. payout, game_process...)
+    """
 
     @staticmethod
     def compute_changing_rate(ticket_odds, market_odds):
+        """
+        Compute changing rate
+
+        :param ticket_odds: odds when this ticket was bought
+        :param market_odds: current market odds
+        :return: rate of win or loss
+        """
         try:
             if ticket_odds > market_odds:
                 return (ticket_odds - market_odds) / (market_odds * (ticket_odds - 1)) + 1
@@ -22,6 +33,16 @@ class Strategy:
         pass
 
     def store_operation(self, operation, option, ticket_odds, invest, market_odds=None, changing_rate=None):
+        """
+        Store operation and output some logging
+
+        :param operation: buy in or cash out
+        :param option: ticket option
+        :param ticket_odds: odds on ticket
+        :param invest: the investment on this ticket
+        :param market_odds: current market odds
+        :param changing_rate: rate of win or loss
+        """
         self.analyzer.insert_operation(operation, option, ticket_odds, invest, market_odds, changing_rate)
         if operation == 0:
             operation = 'CashOut'
@@ -31,6 +52,10 @@ class Strategy:
             % (operation, option, ticket_odds, invest, market_odds, changing_rate)
 
     def payout(self):
+        """
+        Pay out.
+        Iterate ticket_bucket and see what's left in it.
+        """
         winning = 0.0
         winning_tickets = self.ticket_bucket[self.game_data.result]
         for ticket in winning_tickets:
@@ -38,6 +63,11 @@ class Strategy:
         self.winning += winning
 
     def game_processing(self):
+        """
+        Mock game processing.
+        Buy in or cash out while reading each odds.
+        Pay out when odds come to its end
+        """
         for odds_set in self.game_data.odds_sets:
             self.buy_ticket(odds_set)
             self.cash_out(odds_set[:-1:])
@@ -46,6 +76,9 @@ class Strategy:
         self.show_final_stat()
 
     def show_final_stat(self):
+        """
+        Print some log of mocking result
+        """
         print 'invest: %f' % self.invest
         print 'winning: %f' % self.winning
         print 'money: %f' % (self.money + self.winning)
@@ -68,19 +101,38 @@ class Strategy:
 
 
 class KellyInvestor(Strategy):
-
+    """
+    A KellyInvestor will buy tickets using kelly formula and cash out a ticket
+    when its price increase/decrease to a certain rate.
+    """
     @staticmethod
     def kelly_formula(odds, probility):
-        # type: (float, float) -> float
+        """
+        calculate percentage from kelly
+
+        :param odds: odds
+        :param probility: winning probility
+        :return: percentage of kelly
+        """
         return (odds * probility - 1 + probility) / odds
 
     @staticmethod
     def get_probilities(odds_set):
-        # odds_set = map(lambda x: float(x), odds_set)
+        """
+        calculate probilities from odds
+
+        :param odds_set: odds
+        :return: probilities
+        """
         margin = 1 / odds_set[0] + 1 / odds_set[1] + 1 / odds_set[2]
         return 1 / (margin * odds_set[0]), 1 / (margin * odds_set[1]), 1 / (margin * odds_set[2])
 
     def cash_out(self, odds_set):
+        """
+        Cash out when the percentage reach the threshold
+
+        :param odds_set: list of odds
+        """
         total = 0
 
         i = 0
@@ -103,9 +155,21 @@ class KellyInvestor(Strategy):
 
     @staticmethod
     def random_fluctuating(number):
+        """
+        Generate a fluctual of probility
+
+        :param number:
+        :return:
+        """
         return number * random.uniform(0.9, 1.1)
 
     def buy_ticket(self, odds_set):
+        """
+        Buy ticket using kelly formula
+
+        :param odds_set:
+        :return:
+        """
         if odds_set[-2] == 'Run':
             return
         # odds_set = map(lambda x: float(x), odds_set[:2:])
@@ -135,12 +199,26 @@ class KellyInvestor(Strategy):
 
 
 class NonCashoutInvestor(KellyInvestor):
+    """
+    Inherited from KellyInvestor, the NonCashOutInvestor will also buy tickets using Kelly formula,
+    but he/she will cash out tickets when pigs fly.
+    """
 
     def cash_out(self, odds_set):
+        """
+        never cash out
+
+        :param odds_set: list of odds
+        :return:
+        """
         pass
 
 
 class WhoScoreInvestor(Strategy):
+    """
+    A WhoScoreInvestor will set up a certain strong/weak team at beginning and then buy every option of ticket equally.
+    Only When the team which is set up scored earlier than the opposite, the investor would cash out all the tickets.
+    """
 
     def __init__(self, game_data, analyzer, strong_team=False):
         Strategy.__init__(self, game_data, analyzer)
@@ -151,6 +229,11 @@ class WhoScoreInvestor(Strategy):
         self.score = '0-0'
 
     def buy_ticket(self, odds_set):
+        """
+        Buy all tickets at the beginning
+
+        :param odds_set: list of odds
+        """
         if self.money <= 0 or odds_set[-2] == 'Run':
             return
         self.ticket_bucket = {
@@ -170,6 +253,11 @@ class WhoScoreInvestor(Strategy):
             self.score = '1-0'
 
     def cash_out(self, odds_set):
+        """
+        Cash out all tickets when one team scored
+
+        :param odds_set: list of odds
+        """
         print odds_set[-1], self.score
         if odds_set[-2] == 'Run' and odds_set[-1] == self.score:
             total = 0

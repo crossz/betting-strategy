@@ -2,6 +2,9 @@
 
 
 class Analyzer:
+    """
+    Basic Analyzer with defining some nessesary methods in it.(Not completed yet)
+    """
 
     def __init__(self, game_info):
         self.game_info = game_info
@@ -14,6 +17,10 @@ class Analyzer:
 
 
 class ElasticSearchAnalyzer(Analyzer):
+    """
+    The data generated in Strategy module will be stored in ES. In using ES's brilliant searching ability,
+    one can analyze the operation data in many ways and dimensions.
+    """
 
     from elasticsearch.exceptions import RequestError
     from elasticsearch import Elasticsearch
@@ -32,8 +39,17 @@ class ElasticSearchAnalyzer(Analyzer):
                 print e
 
     def insert_operation(self, operation, option, ticket_odds, invest, market_odds, percentage):
+        """
+        Insert operation data into es
 
-        # noinspection PyDictCreation
+        :param operation: buy in or cash out
+        :param option: ticket option
+        :param ticket_odds: ticket odds
+        :param invest: the invest on this ticket
+        :param market_odds: current market odds
+        :param percentage: winning or loss rate
+        :return:
+        """
         operation_body = {
             'europe_id': self.game_info['europe_id'],
             'handicap_line': self.game_info['handicap_line'],
@@ -63,6 +79,16 @@ class MySQLAnalyzer(Analyzer):
         Analyzer.__init__(self, game_info)
 
     def insert_operation(self, operation, option, ticket_odds, invest, market_odds, percentage):
+        """
+        Insert operation data into mysql
+
+        :param operation: buy in or cash out
+        :param option: ticket option
+        :param ticket_odds: ticket odds
+        :param invest: the invest on this ticket
+        :param market_odds: current market odds
+        :param percentage: winning or loss rate
+        """
 
         with MySQLAnalyzer.conn.cursor() as cur:
             sql = 'INSERT INTO operations ' \
@@ -81,6 +107,14 @@ class MySQLAnalyzer(Analyzer):
             MySQLAnalyzer.conn.commit()
 
     def insert_result(self, total_winning, total_invest, total_money):
+        """
+        Insert mocking result into mysql
+
+        :param total_winning: money from pay out and cash out
+        :param total_invest: total spending money
+        :param total_money: final money in hand
+        :return:
+        """
         with MySQLAnalyzer.conn.cursor() as cur:
             sql = 'INSERT INTO result ' \
                   '(uuid, europe_id, hadicap_line, hilo_line, result, strategy, strategy_args, total_winning, total_invest, final_money) ' \

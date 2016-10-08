@@ -1,11 +1,18 @@
 # -*- coding=utf-8 -*-
 
-db_host = '192.168.1.5'
-db_user = 'caiex'
-db_passwd = '12345678'
-
 
 class GameData:
+    """
+    This class is basically a dto class with loading data methods in it.
+
+    fields:
+        europe_id: global unique id for one game.
+        handicap_line: handicap line.
+        hilo_line: hilo line.
+        result: final result of this game. 0 for home win, 1 for draw and 2 for away win
+        odds_set: list for odds
+
+    """
 
     def __init__(self, origin_data):
         self.europe_id = origin_data[0][0]
@@ -24,12 +31,29 @@ class GameData:
 
     @staticmethod
     def split_odds(origin):
+        """
+        Cast odds from string to float
+
+        :param origin: original data from mysql
+        :return: odds in float type
+        """
         return map(lambda x: float(x), origin[1:4:]) + list(origin[4:7:])
 
     @staticmethod
     def get_data_from_mysql(europe_id=None, game_num=50):
-        import pymysql
+        """
+        Loading data from mysql.
+        Matches will be chosen randomly unless you set europe_id specifically.
+        The odds are from liji.
 
+        :param europe_id: global unique id for one game.
+        :param game_num: number of games read from mysql
+        :return: original data
+        """
+        import pymysql
+        db_host = '192.168.1.5'
+        db_user = 'caiex'
+        db_passwd = '12345678'
         game_list = list()
         with pymysql.connect(host=db_host, user=db_user, passwd=db_passwd, db='crawler', charset='utf8') as cursor:
             with cursor as cur:
