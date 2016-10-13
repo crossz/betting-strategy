@@ -258,7 +258,6 @@ class WhoScoreInvestor(Strategy):
 
         :param odds_set: list of odds
         """
-        print odds_set[-1], self.score
         if odds_set[-2] == 'Run' and odds_set[-1] == self.score:
             total = 0
             for option in self.ticket_bucket:

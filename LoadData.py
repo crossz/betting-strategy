@@ -1,4 +1,5 @@
 # -*- coding=utf-8 -*-
+import numpy
 
 
 class GameData:
@@ -28,6 +29,7 @@ class GameData:
         elif int(score[0]) < int(score[2]):
             self.result = 2
         self.odds_sets = map(GameData.split_odds, origin_data[::-1])
+        self.odds_sets = numpy.array(self.odds_sets, dtype=object)
 
     @staticmethod
     def split_odds(origin):
