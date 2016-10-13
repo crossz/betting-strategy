@@ -40,7 +40,7 @@ class GameData:
         return map(lambda x: float(x), origin[1:4:]) + list(origin[4:7:])
 
     @staticmethod
-    def get_data_from_mysql(europe_id=None, game_num=50):
+    def get_data_from_mysql(europe_id=None, game_num=50, sql=None):
         """
         Loading data from mysql.
         Matches will be chosen randomly unless you set europe_id specifically.
@@ -48,6 +48,7 @@ class GameData:
 
         :param europe_id: global unique id for one game.
         :param game_num: number of games read from mysql
+        :param sql: self-defined sql
         :return: original data
         """
         import pymysql
@@ -58,7 +59,8 @@ class GameData:
         with pymysql.connect(host=db_host, user=db_user, passwd=db_passwd, db='crawler', charset='utf8') as cursor:
             with cursor as cur:
                 if europe_id is None:
-                    sql = 'SELECT europe_id FROM company_odds_history ORDER BY RAND() LIMIT %d' % game_num
+                    sql = 'SELECT europe_id FROM company_odds_history ORDER BY RAND() LIMIT %d' % game_num \
+                        if sql is None else sql
 
                     cur.execute(sql)
                     europe_ids = cur.fetchall()
