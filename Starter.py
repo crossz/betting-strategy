@@ -1,6 +1,9 @@
-from LoadData import *
-from Strategy import *
-from Analysis import *
+import LoadData
+import Strategy
+import Analysis
+GameData = LoadData.GameData
+WhoScoreInvestor = Strategy.WhoScoreInvestor
+MySQLAnalyzer = Analysis.Analyzer
 
 game_data = GameData.get_data_from_mysql(game_num=50)
 
