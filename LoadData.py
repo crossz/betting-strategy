@@ -91,8 +91,10 @@ class GameData:
                     cur.execute(sql)
                     result_set = cur.fetchall()
                     if len(result_set) > 50:
-                        game_list.append(GameData(result_set))
-
+                        try:
+                            game_list.append(GameData(result_set))
+                        except Exception:
+                            pass
         return game_list
 
     def __str__(self):
