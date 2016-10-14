@@ -98,6 +98,7 @@ class GameData:
                     result_set = cur.fetchall()
                     if len(result_set) > 50:
                         try:
+                            GameData.__check_data(result_set)
                             game_list.append(GameData(result_set))
                         except Exception as e:
                             print e
@@ -105,6 +106,13 @@ class GameData:
                     print('europe_id is {} | {:3.2f} % '.format(europe_id[0], i / ii * 100))
 
         return game_list
+
+    @staticmethod
+    def __check_data(result_set):
+        for result in result_set[0]:
+            for field in result_set:
+                if field is None:
+                    raise Exception("There's none in result_set")
 
     def __str__(self):
         return 'europe_id: %d' % self.europe_id
