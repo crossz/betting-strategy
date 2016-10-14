@@ -17,10 +17,10 @@ class GameData:
 
     def __init__(self, origin_data):
         self.europe_id = origin_data[0][0]
+        self.unique_id = origin_data[0][-4]
 
         self.handicap_line = origin_data[0][-2]
         self.hilo_line = origin_data[0][-1]
-
         score = origin_data[0][-3] if origin_data[0][-3] is not None else origin_data[0][-4]
         if int(score[0]) > int(score[2]):
             self.result = 0
@@ -39,7 +39,7 @@ class GameData:
         :param origin: original data from mysql
         :return: odds in float type
         """
-        return map(lambda x: float(x), origin[1:4:]) + list(origin[4:7:])
+        return map(lambda x: float(x), origin[1:4:]) + list(origin[4:6:])
 
     @staticmethod
     def get_data_from_mysql(europe_id=None, game_num=50, sql=None):
@@ -80,6 +80,7 @@ class GameData:
                         a.odds_three, \
                         a.state, \
                         a.score, \
+                        b.unique_id, \
                         b.SCORE final_score, \
                         c.handicap_line, \
                         c.liji_hilo_line \

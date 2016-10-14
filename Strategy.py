@@ -92,10 +92,12 @@ class Strategy:
         game_info = {
             'uuid': uuid.uuid1(),
             'europe_id': game_data.europe_id,
+            'unique_id': game_data.unique_id,
             'handicap_line': game_data.handicap_line,
             'hilo_line': game_data.hilo_line,
             'result': game_data.result,
-            'strategy': str(self.__class__).split('.')[1]
+            'strategy': str(self.__class__).split('.')[1],
+            'strategy_args': dict()
         }
         self.analyzer = analyzer(game_info)
 
@@ -136,7 +138,7 @@ class KellyInvestor(Strategy):
         total = 0
 
         i = 0
-        for i in range(len(odds_set)):
+        for i in range(len(odds_set[0:3:])):
             if len(self.ticket_bucket[i]) == 0:
                 continue
             ticket_copy = self.ticket_bucket[i].copy()
@@ -174,7 +176,7 @@ class KellyInvestor(Strategy):
             return
         # odds_set = map(lambda x: float(x), odds_set[:2:])
         probilities = KellyInvestor.get_probilities(odds_set)
-        for i in range(len(odds_set)):
+        for i in range(len(odds_set[0:3])):
             if random.random() < self.buying_factor:
                 f = KellyInvestor.kelly_formula(odds_set[i] - 1, KellyInvestor.random_fluctuating(probilities[i]))
                 if f > 0:
