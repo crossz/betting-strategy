@@ -69,6 +69,9 @@ class GameData:
                 else:
                     europe_ids = (europe_id, )
 
+                i = 0
+                ii = float(len(europe_ids))
+
                 for europe_id in europe_ids:
                     sql = 'SELECT \
                         a.europe_id, \
@@ -95,8 +98,11 @@ class GameData:
                     if len(result_set) > 50:
                         try:
                             game_list.append(GameData(result_set))
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            print e
+                    i += 1
+                    print('europe_id is {} | {:3.2f} % '.format(europe_id[0], i / ii * 100))
+
         return game_list
 
     def __str__(self):

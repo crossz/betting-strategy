@@ -89,7 +89,6 @@ class MySQLAnalyzer(Analyzer):
         :param market_odds: current market odds
         :param percentage: winning or loss rate
         """
-
         with MySQLAnalyzer.conn.cursor() as cur:
             sql = 'INSERT INTO operations ' \
                   '(uuid, operation, `option`, ticket_odds, invest, market_odds, percentage) ' \

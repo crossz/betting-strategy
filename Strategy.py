@@ -53,7 +53,7 @@ class Strategy:
 
     def payout(self):
         """
-        Pay out.
+        Pay out
         Iterate ticket_bucket and see what's left in it.
         """
         winning = 0.0
