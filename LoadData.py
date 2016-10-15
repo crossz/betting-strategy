@@ -110,7 +110,7 @@ class GameData:
     @staticmethod
     def __check_data(result_set):
         for result in result_set[0]:
-            for field in result_set:
+            for field in result:
                 if field is None:
                     raise Exception("There's none in result_set")
 
