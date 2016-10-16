@@ -6,14 +6,20 @@ class Analyzer:
     Basic Analyzer with defining some nessesary methods in it.(Not completed yet)
     """
 
-    def __init__(self, game_info):
-        self.game_info = game_info
+    def __init__(self, operation_list, result_dict):
+        self.operation_list = operation_list
+        self.result_dict = result_dict
 
-    def insert_operation(self, operation, option, ticket_odds, invest, market_odds, percentage):
+    def save_operation(self, operation, option, ticket_odds, invest, market_odds, percentage):
         pass
 
-    def insert_result(self, total_winning, total_invest, total_money):
+    def save_result(self):
         pass
+
+    def save_all(self):
+        for operation in self.operation_list:
+            self.save_operation(operation[0], operation[1], operation[2], operation[3], operation[4], operation[5])
+        self.save_result()
 
 
 class ElasticSearchAnalyzer(Analyzer):
@@ -38,7 +44,7 @@ class ElasticSearchAnalyzer(Analyzer):
             if e.error != 'index_already_exists_exception':
                 print e
 
-    def insert_operation(self, operation, option, ticket_odds, invest, market_odds, percentage):
+    def save_operation(self, operation, option, ticket_odds, invest, market_odds, percentage):
         """
         Insert operation data into es
 
@@ -75,10 +81,10 @@ class MySQLAnalyzer(Analyzer):
     import pymysql
     conn = pymysql.connect(host=db_host, user=db_user, passwd=db_passwd, db='testing', charset='utf8')
 
-    def __init__(self, game_info):
-        Analyzer.__init__(self, game_info)
+    def __init__(self, operation_list, result_dict):
+        Analyzer.__init__(self, operation_list, result_dict)
 
-    def insert_operation(self, operation, option, ticket_odds, invest, market_odds, percentage):
+    def save_operation(self, operation, option, ticket_odds, invest, market_odds, percentage):
         """
         Insert operation data into mysql
 
@@ -94,7 +100,7 @@ class MySQLAnalyzer(Analyzer):
                   '(uuid, operation, `option`, ticket_odds, invest, market_odds, percentage) ' \
                   'VALUES ' \
                   '(%s, %s, %s, %s, %s, %s, %s)'
-            param = (self.game_info['uuid'].__str__(),
+            param = (self.result_dict['uuid'],
                      operation,
                      option,
                      ticket_odds,
@@ -105,7 +111,7 @@ class MySQLAnalyzer(Analyzer):
             cur.execute(sql, param)
             MySQLAnalyzer.conn.commit()
 
-    def insert_result(self, total_winning, total_invest, total_money):
+    def save_result(self):
         """
         Insert mocking result into mysql
 
@@ -121,17 +127,17 @@ class MySQLAnalyzer(Analyzer):
                   '(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 
             param = (
-                self.game_info['uuid'].__str__(),
-                self.game_info['europe_id'],
-                self.game_info['unique_id'],
-                self.game_info['handicap_line'],
-                self.game_info['hilo_line'],
-                self.game_info['result'],
-                self.game_info['strategy'],
-                self.game_info['strategy_args'].__str__(),
-                total_winning,
-                total_invest,
-                total_money
+                self.result_dict['uuid'],
+                self.result_dict['europe_id'],
+                self.result_dict['unique_id'],
+                self.result_dict['handicap_line'],
+                self.result_dict['hilo_line'],
+                self.result_dict['result'],
+                self.result_dict['strategy'],
+                self.result_dict['strategy_args'].__str__(),
+                self.result_dict['total_winning'],
+                self.result_dict['total_invest'],
+                self.result_dict['total_money']
             )
 
             cur.execute(sql, param)
@@ -140,26 +146,26 @@ class MySQLAnalyzer(Analyzer):
 
 class MemoryAnalyzer(Analyzer):
 
-    def __init__(self, game_info):
-        Analyzer.__init__(self, game_info)
-        self.operation_list = list()
-        self.result = {
-            'uuid': game_info['uuid'].__str__(),
-            'europe_id': game_info['europe_id'],
-            'unique_id': game_info['unique_id'],
-            'handicap_line': game_info['handicap_line'],
-            'hilo_line': game_info['hilo_line'],
-            'result': game_info['result'],
-            'strategy': game_info['strategy'],
-        }
+    def __init__(self, operation_list, result_dict):
+        Analyzer.__init__(self, operation_list, result_dict)
+        # self.operation_list = list()
+        # self.result = {
+        #     'uuid': game_info['uuid'].__str__(),
+        #     'europe_id': game_info['europe_id'],
+        #     'unique_id': game_info['unique_id'],
+        #     'handicap_line': game_info['handicap_line'],
+        #     'hilo_line': game_info['hilo_line'],
+        #     'result': game_info['result'],
+        #     'strategy': game_info['strategy'],
+        # }
 
-    def insert_operation(self, operation, option, ticket_odds, invest, market_odds, percentage):
-        self.operation_list.append(
-            (operation, option, ticket_odds, invest, market_odds, percentage)
-        )
-
-    def insert_result(self, total_winning, total_invest, total_money):
-        self.result['total_winning'] = total_winning
-        self.result['total_invest'] = total_invest
-        self.result['total_money'] = total_money
-        self.result['strategy_args'] = self.game_info['strategy_args'].__str__()
+    # def insert_operation(self, operation, option, ticket_odds, invest, market_odds, percentage):
+    #     # self.operation_list.append(
+    #     #     (operation, option, ticket_odds, invest, market_odds, percentage)
+    #     # )
+    #
+    # def insert_result(self, total_winning, total_invest, total_money):
+    #     self.result['total_winning'] = total_winning
+    #     self.result['total_invest'] = total_invest
+    #     self.result['total_money'] = total_money
+    #     self.result['strategy_args'] = self.game_info['strategy_args'].__str__()

@@ -43,7 +43,8 @@ class Strategy:
         :param market_odds: current market odds
         :param changing_rate: rate of win or loss
         """
-        self.analyzer.insert_operation(operation, option, ticket_odds, invest, market_odds, changing_rate)
+        # self.analyzer.insert_operation(operation, option, ticket_odds, invest, market_odds, changing_rate)
+        self.operation_list.append((operation, option, ticket_odds, invest, market_odds, changing_rate))
         if operation == 0:
             operation = 'CashOut'
         elif operation == 1:
@@ -72,7 +73,10 @@ class Strategy:
             self.buy_ticket(odds_set)
             self.cash_out(odds_set[:-1:])
         self.payout()
-        self.analyzer.insert_result(self.winning, self.invest, self.money + self.winning)
+        # self.analyzer.insert_result(self.winning, self.invest, self.money + self.winning)
+        self.result_dict['total_winning'] = self.winning
+        self.result_dict['total_invest'] = self.invest
+        self.result_dict['total_money'] = self.money + self.winning
         self.show_final_stat()
 
     def show_final_stat(self):
@@ -83,14 +87,15 @@ class Strategy:
         print 'winning: %f' % self.winning
         print 'money: %f' % (self.money + self.winning)
 
-    def __init__(self, game_data, analyzer):
+    def __init__(self, game_data):
         self.ticket_bucket = {0: {}, 1: {}, 2: {}}
         self.money = 1
         self.invest = 0
         self.winning = 0
         self.game_data = game_data
-        game_info = {
-            'uuid': uuid.uuid1(),
+        self.operation_list = list()
+        self.result_dict = {
+            'uuid': uuid.uuid1().__str__(),
             'europe_id': game_data.europe_id,
             'unique_id': game_data.unique_id,
             'handicap_line': game_data.handicap_line,
@@ -99,7 +104,17 @@ class Strategy:
             'strategy': str(self.__class__).split('.')[1],
             'strategy_args': dict()
         }
-        self.analyzer = analyzer(game_info)
+        # game_info = {
+        #     'uuid': uuid.uuid1(),
+        #     'europe_id': game_data.europe_id,
+        #     'unique_id': game_data.unique_id,
+        #     'handicap_line': game_data.handicap_line,
+        #     'hilo_line': game_data.hilo_line,
+        #     'result': game_data.result,
+        #     'strategy': str(self.__class__).split('.')[1],
+        #     'strategy_args': dict()
+        # }
+        # self.analyzer = analyzer(self.operation_list, self.result_dict)
 
 
 class KellyInvestor(Strategy):
@@ -188,8 +203,8 @@ class KellyInvestor(Strategy):
                     self.money -= invest
 
     def __init__(self, game_data, analyzer, buying_factor=0.5, cash_out_factor_high=1.8, cash_out_factor_low=-0.5):
-        Strategy.__init__(self, game_data, analyzer)
-        self.analyzer.game_info['strategy_args'] = {
+        Strategy.__init__(self, game_data)
+        self.result_dict['strategy_args'] = {
             'buying_factor': buying_factor,
             'cash_out_factor_high': cash_out_factor_high,
             'cash_out_factor_low': cash_out_factor_low
@@ -223,8 +238,8 @@ class WhoScoreInvestor(Strategy):
     """
 
     def __init__(self, game_data, analyzer, strong_team=False):
-        Strategy.__init__(self, game_data, analyzer)
-        self.analyzer.game_info['strategy_args'] = {
+        Strategy.__init__(self, game_data)
+        self.result_dict['strategy_args'] = {
             'strong_team': strong_team
         }
         self.strong_team = strong_team
