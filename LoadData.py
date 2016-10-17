@@ -109,10 +109,10 @@ class GameData:
 
     @staticmethod
     def __check_data(result_set):
-        for result in result_set[0]:
-            for field in result:
-                if field is None:
-                    raise Exception("There's none in result_set")
+        print result_set[0]
+        for field in result_set[0]:
+            if field is None:
+                raise Exception("There's none in result_set")
 
     def __str__(self):
         return 'europe_id: %d' % self.europe_id

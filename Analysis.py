@@ -148,24 +148,3 @@ class MemoryAnalyzer(Analyzer):
 
     def __init__(self, operation_list, result_dict):
         Analyzer.__init__(self, operation_list, result_dict)
-        # self.operation_list = list()
-        # self.result = {
-        #     'uuid': game_info['uuid'].__str__(),
-        #     'europe_id': game_info['europe_id'],
-        #     'unique_id': game_info['unique_id'],
-        #     'handicap_line': game_info['handicap_line'],
-        #     'hilo_line': game_info['hilo_line'],
-        #     'result': game_info['result'],
-        #     'strategy': game_info['strategy'],
-        # }
-
-    # def insert_operation(self, operation, option, ticket_odds, invest, market_odds, percentage):
-    #     # self.operation_list.append(
-    #     #     (operation, option, ticket_odds, invest, market_odds, percentage)
-    #     # )
-    #
-    # def insert_result(self, total_winning, total_invest, total_money):
-    #     self.result['total_winning'] = total_winning
-    #     self.result['total_invest'] = total_invest
-    #     self.result['total_money'] = total_money
-    #     self.result['strategy_args'] = self.game_info['strategy_args'].__str__()

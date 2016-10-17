@@ -43,7 +43,6 @@ class Strategy:
         :param market_odds: current market odds
         :param changing_rate: rate of win or loss
         """
-        # self.analyzer.insert_operation(operation, option, ticket_odds, invest, market_odds, changing_rate)
         self.operation_list.append((operation, option, ticket_odds, invest, market_odds, changing_rate))
         if operation == 0:
             operation = 'CashOut'
@@ -73,7 +72,6 @@ class Strategy:
             self.buy_ticket(odds_set)
             self.cash_out(odds_set[:-1:])
         self.payout()
-        # self.analyzer.insert_result(self.winning, self.invest, self.money + self.winning)
         self.result_dict['total_winning'] = self.winning
         self.result_dict['total_invest'] = self.invest
         self.result_dict['total_money'] = self.money + self.winning
@@ -104,17 +102,6 @@ class Strategy:
             'strategy': str(self.__class__).split('.')[1],
             'strategy_args': dict()
         }
-        # game_info = {
-        #     'uuid': uuid.uuid1(),
-        #     'europe_id': game_data.europe_id,
-        #     'unique_id': game_data.unique_id,
-        #     'handicap_line': game_data.handicap_line,
-        #     'hilo_line': game_data.hilo_line,
-        #     'result': game_data.result,
-        #     'strategy': str(self.__class__).split('.')[1],
-        #     'strategy_args': dict()
-        # }
-        # self.analyzer = analyzer(self.operation_list, self.result_dict)
 
 
 class KellyInvestor(Strategy):
@@ -152,7 +139,6 @@ class KellyInvestor(Strategy):
         """
         total = 0
 
-        i = 0
         for i in range(len(odds_set[0:3:])):
             if len(self.ticket_bucket[i]) == 0:
                 continue
@@ -162,7 +148,6 @@ class KellyInvestor(Strategy):
 
                 if percentage > self.cash_out_factor_high or percentage < self.cash_out_factor_low:
                     total += self.ticket_bucket[i][ticket][0] / odds_set[i] * self.ticket_bucket[i][ticket][1]
-                    # print i, percentage, self.ticket_bucket[i][ticket], odds_set[i]
                     self.store_operation(0, i, self.ticket_bucket[i][ticket][0], self.ticket_bucket[i][ticket][1], odds_set[i], percentage)
                     del ticket_copy[ticket]
             self.ticket_bucket[i] = ticket_copy
@@ -189,7 +174,6 @@ class KellyInvestor(Strategy):
         """
         if odds_set[-2] == 'Run':
             return
-        # odds_set = map(lambda x: float(x), odds_set[:2:])
         probilities = KellyInvestor.get_probilities(odds_set)
         for i in range(len(odds_set[0:3])):
             if random.random() < self.buying_factor:
@@ -197,12 +181,11 @@ class KellyInvestor(Strategy):
                 if f > 0:
                     invest = f * self.money
                     self.ticket_bucket[i][len(self.ticket_bucket[i])] = (odds_set[i], invest)
-                    # print 'BuyTicket --> option: %d, ticket_odds: %f, invest: %f' % (i, odds_set[i], invest)
                     self.store_operation(1, i, odds_set[i], invest)
                     self.invest += invest
                     self.money -= invest
 
-    def __init__(self, game_data, analyzer, buying_factor=0.5, cash_out_factor_high=1.8, cash_out_factor_low=-0.5):
+    def __init__(self, game_data, buying_factor=0.5, cash_out_factor_high=1.8, cash_out_factor_low=-0.5):
         Strategy.__init__(self, game_data)
         self.result_dict['strategy_args'] = {
             'buying_factor': buying_factor,
@@ -237,7 +220,7 @@ class WhoScoreInvestor(Strategy):
     Only When the team which is set up scored earlier than the opposite, the investor would cash out all the tickets.
     """
 
-    def __init__(self, game_data, analyzer, strong_team=False):
+    def __init__(self, game_data, strong_team=False):
         Strategy.__init__(self, game_data)
         self.result_dict['strategy_args'] = {
             'strong_team': strong_team
