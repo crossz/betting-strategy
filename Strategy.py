@@ -70,7 +70,7 @@ class Strategy:
         """
         for odds_set in self.game_data.odds_sets:
             self.buy_ticket(odds_set)
-            self.cash_out(odds_set[:-1:])
+            self.cash_out(odds_set)
         self.payout()
         self.result_dict['total_winning'] = self.winning
         self.result_dict['total_invest'] = self.invest

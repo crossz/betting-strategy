@@ -91,6 +91,7 @@ class GameData:
                     WHERE \
                         a.odds_type = 0 \
                     AND a.gaming_company = "利记" \
+                    AND a.odds_one != 0 \
                     AND a.europe_id = %s \
                     ORDER BY \
                         a.update_time DESC' % europe_id
@@ -110,9 +111,11 @@ class GameData:
     @staticmethod
     def __check_data(result_set):
         print result_set[0]
-        for field in result_set[0]:
-            if field is None:
-                raise Exception("There's none in result_set")
+
+        for result in result_set:
+            for field in result[:6]:
+                if field in [0, None]:
+                    raise Exception("There's none in result_set")
 
     def __str__(self):
         return 'europe_id: %d' % self.europe_id
