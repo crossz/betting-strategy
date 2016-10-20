@@ -70,7 +70,9 @@ class Strategy:
         """
         for odds_set in self.game_data.odds_sets:
             self.buy_ticket(odds_set)
-            self.cash_out(odds_set)
+            if self.co_action is True:
+                self.cash_out(odds_set)
+
         self.payout()
         self.result_dict['total_winning'] = self.winning
         self.result_dict['total_invest'] = self.invest
@@ -86,6 +88,7 @@ class Strategy:
         print 'money: %f' % (self.money + self.winning)
 
     def __init__(self, game_data):
+        self.co_action = True
         self.ticket_bucket = {0: {}, 1: {}, 2: {}}
         self.money = 1
         self.invest = 0
@@ -220,12 +223,14 @@ class WhoScoreInvestor(Strategy):
     Only When the team which is set up scored earlier than the opposite, the investor would cash out all the tickets.
     """
 
-    def __init__(self, game_data, strong_team=False):
+    def __init__(self, game_data, strong_team=False, co_action=True):
         Strategy.__init__(self, game_data)
         self.result_dict['strategy_args'] = {
             'strong_team': strong_team
         }
         self.strong_team = strong_team
+        self.co_action = co_action
+
         self.score = '0-0'
 
     def buy_ticket(self, odds_set):
